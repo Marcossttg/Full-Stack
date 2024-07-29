@@ -7,7 +7,7 @@ import User from '../models/User'
 
 class OrderController {
   async store(request, response) {
-    const schema = Yup.object().shape({
+    const schema = Yup.object({
       products: Yup.array()
         .required()
         .of(
@@ -24,11 +24,13 @@ class OrderController {
       return response.status(400).json({ error: err.errors })
     }
 
-    const productsId = request.body.products.map((product) => product.id)
+    const { products } = request.body
 
-    const updatedProducts = await Product.findAll({
+    const productsIds = request.body.products.map((product) => product.id)
+
+    const findProducts = await Product.findAll({
       where: {
-        id: productsId,
+        id: productsIds,
       },
       include: [
         {
@@ -38,18 +40,17 @@ class OrderController {
         },
       ],
     })
-    const editedProduct = updatedProducts.map((product) => {
-      const productIndex = request.body.products.findIndex(
-        (requestProduct) => requestProduct.id === product.id,
+    const formattedProducts = findProducts.map((product) => {
+      const productIndex = products.findIndex(
+        (item) => item.id === product.id,
       )
-
       const newProduct = {
         id: product.id,
         name: product.name,
-        price: product.price,
         category: product.category.name,
+        price: product.price,
         url: product.url,
-        quantity: request.body.products[productIndex].quantity,
+        quantity: products[productIndex].quantity,
       }
 
       return newProduct
@@ -60,7 +61,7 @@ class OrderController {
         id: request.userId,
         name: request.userName,
       },
-      products: editedProduct,
+      products: formattedProducts,
       status: 'Pedido realizado',
     }
 
@@ -106,3 +107,4 @@ class OrderController {
 }
 
 export default new OrderController()
+
