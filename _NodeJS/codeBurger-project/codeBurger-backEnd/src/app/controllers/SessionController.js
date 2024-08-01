@@ -1,15 +1,12 @@
 import * as Yup from 'yup'
-
 import jwt from 'jsonwebtoken'
-
 import authConfig from '../../config/auth'
-
 import User from '../models/User'
 
 // criando validação de email e senha com schema.isValid
 class SessionController {
   async store(request, response) {
-    const schema = Yup.object({
+    const schema = Yup.object().shape({
       email: Yup.string().email().required(),
       password: Yup.string().required(),
     })
@@ -46,10 +43,7 @@ class SessionController {
       name: user.name,
       email,
       admin: user.admin,
-      token: jwt.sign({
-        id: user.id,
-        name: user.name,
-      }, authConfig.secret, {
+      token: jwt.sign({ id: user.id, name: user.name }, authConfig.secret, {
         expiresIn: authConfig.expiresIn,
       }),
     })
